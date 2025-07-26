@@ -111,10 +111,29 @@ export const getSupplierRatings = async (supplierId) => {
 };
 
 // Get nearby suppliers with geolocation
-export const getNearbySuppliers = async (latitude, longitude, radius = 10) => {
+export const getNearbySuppliers = async (latitude, longitude, radius = 10, category = null) => {
     try {
-        const response = await api.get(`/suppliers/nearby?lat=${latitude}&lng=${longitude}&radius=${radius}`);
-        return response.data;
+        const params = new URLSearchParams({
+            lat: latitude.toString(),
+            lng: longitude.toString(),
+            radius: radius.toString()
+        });
+
+        if (category && category !== 'all') {
+            params.append('category', category);
+        }
+
+        const response = await api.get(`/suppliers/nearby?${params.toString()}`);
+
+        // Handle the response format from backend
+        if (response.data && response.data.success && Array.isArray(response.data.data)) {
+            return response.data.data;
+        } else if (Array.isArray(response.data)) {
+            return response.data;
+        } else {
+            console.warn('Unexpected response format from nearby suppliers API:', response.data);
+            return [];
+        }
     } catch (error) {
         console.error('Error fetching nearby suppliers:', error);
         throw error;

@@ -18,46 +18,7 @@ import {
   FaStar,
   FaUtensils
 } from 'react-icons/fa';
-
-// Mock data for nearby suppliers
-const nearbySuppliers = [
-  {
-    id: 1,
-    name: "Singh Vegetable Supply",
-    category: "Vegetables",
-    rating: 4.8,
-    distance: "2.5 km",
-    specialties: ["Fresh onions", "Seasonal vegetables"],
-    image: "https://images.unsplash.com/photo-1498837167922-ddd27525d352?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60"
-  },
-  {
-    id: 2,
-    name: "Sharma Masala Mart",
-    category: "Spices",
-    rating: 4.9,
-    distance: "3.8 km",
-    specialties: ["Authentic spices", "Pure quality"],
-    image: "https://images.unsplash.com/photo-1532336414038-cf19250c5757?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60"
-  },
-  {
-    id: 3,
-    name: "Fresh Dairy Supplies",
-    category: "Dairy",
-    rating: 4.7,
-    distance: "4.2 km",
-    specialties: ["Fresh paneer", "Direct from farms"],
-    image: "https://images.unsplash.com/photo-1550583724-b2692b85b150?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60"
-  },
-  {
-    id: 4,
-    name: "Gupta Oil Traders",
-    category: "Oils",
-    rating: 4.6,
-    distance: "3.0 km",
-    specialties: ["Cold pressed oils", "Bulk packages"],
-    image: "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60"
-  }
-];
+import NearbySuppliers from '../components/NearbySuppliers';
 
 // Mock data for trending items
 const trendingItems = [
@@ -156,21 +117,27 @@ const LandingPage = () => {
                 </Link>
               </div>
               
-              {/* Location search bar */}
+              {/* Enhanced Location search bar with auto-detection */}
               <div className="mt-8 max-w-md mx-auto lg:mx-0">
-                <div className="flex bg-white rounded-lg overflow-hidden p-1">
+                <div className="flex bg-white rounded-lg overflow-hidden p-1 shadow-lg">
                   <div className="flex-grow">
                     <input 
                       type="text" 
                       className="w-full py-2 px-4 text-gray-800 focus:outline-none" 
-                      placeholder="Enter your location to find nearby suppliers..."
+                      placeholder="Enter your location or use GPS..."
                       value={locationSearch}
                       onChange={(e) => setLocationSearch(e.target.value)}
                     />
                   </div>
-                  <button className="bg-orange-500 text-white px-4 py-2 rounded-md flex items-center">
-                    <FaSearch className="mr-2" /> Search
+                  <button 
+                    className="bg-orange-500 text-white px-3 py-2 rounded-md flex items-center hover:bg-orange-600 transition-colors"
+                    onClick={() => document.getElementById('nearby-suppliers')?.scrollIntoView({ behavior: 'smooth' })}
+                  >
+                    <FaMapMarkerAlt className="mr-2" /> Find Now
                   </button>
+                </div>
+                <div className="mt-3 text-center text-orange-100 text-sm">
+                  🗺️ <strong>New!</strong> Real-time location detection & interactive maps
                 </div>
               </div>
             </div>
@@ -246,70 +213,10 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* Nearby Suppliers Section */}
+      {/* Nearby Suppliers Section - Enhanced with Location Detection */}
       <section id="nearby-suppliers" className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <div className="inline-flex items-center text-orange-500 mb-2">
-              <FaMapMarkerAlt className="mr-2" />
-              <span className="text-sm font-bold uppercase tracking-wider">Local Suppliers</span>
-            </div>
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Discover Suppliers Near You</h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Connect with trusted local suppliers for fresh ingredients and better prices
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {nearbySuppliers.map(supplier => (
-              <div key={supplier.id} className="flex bg-white rounded-lg overflow-hidden shadow-sm border border-gray-100">
-                <div className="w-1/3 overflow-hidden">
-                  <img src={supplier.image} alt={supplier.name} className="h-full w-full object-cover" />
-                </div>
-                <div className="w-2/3 p-6">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <span className="inline-block px-2 py-1 bg-orange-100 rounded-full text-xs font-medium text-orange-800 mb-2">{supplier.category}</span>
-                      <h3 className="text-xl font-bold">{supplier.name}</h3>
-                    </div>
-                    <div className="flex items-center text-amber-500">
-                      <FaStar className="mr-1" />
-                      <span className="font-bold">{supplier.rating}</span>
-                    </div>
-                  </div>
-                  <div className="mt-2 flex items-center text-gray-600">
-                    <FaMapMarkerAlt className="mr-2 text-orange-500" />
-                    <span>{supplier.distance}</span>
-                  </div>
-                  <div className="mt-3">
-                    <h4 className="text-sm font-medium text-gray-700">Specialties:</h4>
-                    <div className="flex mt-1 flex-wrap gap-1">
-                      {supplier.specialties.map((specialty, idx) => (
-                        <span key={idx} className="inline-block px-2 py-1 bg-gray-100 rounded-md text-xs">{specialty}</span>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="mt-4">
-                    <Link 
-                      to="/login" 
-                      className="inline-block py-2 px-4 bg-orange-500 text-white font-medium rounded hover:bg-orange-600 transition-colors"
-                    >
-                      Contact Supplier
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-10 text-center">
-            <Link 
-              to="/login" 
-              className="inline-block py-3 px-8 bg-orange-100 text-orange-700 font-medium rounded-lg hover:bg-orange-200 transition-colors"
-            >
-              View All Nearby Suppliers
-            </Link>
-          </div>
+          <NearbySuppliers />
         </div>
       </section>
 
