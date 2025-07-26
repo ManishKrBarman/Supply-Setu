@@ -1,13 +1,9 @@
-import { useState } from 'react'
-import './App.css'
+import React from 'react';
+import AppRouter from './AppRouter';
+import './App.css';
 
 function App() {
-
-  return (
-    <>
-      <h1>Welcome to Supply Setu</h1>
-    </>
-  )
+  return <AppRouter />;
 }
 
-export default App
+export default App;
