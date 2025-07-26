@@ -4,8 +4,11 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import productRoutes from './routes/productRoutes.js';
 import supplierRoutes from './routes/supplierRoutes.js';
+import supplierVerificationRoutes from './routes/supplierVerificationRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import foodRoutes from './routes/foodRoutes.js';
+import orderRoutes from './routes/orderRoutes.js';
+import adminRoutes from './routes/adminRoutes.js';
 import { errorHandler } from './middleware/errorMiddleware.js';
 
 dotenv.config();
@@ -56,7 +59,9 @@ app.get('/', (req, res) => {
             products: '/api/products',
             suppliers: '/api/suppliers',
             users: '/api/users',
-            foods: '/api/foods'
+            foods: '/api/foods',
+            orders: '/api/orders',
+            admin: '/api/admin'
         }
     });
 });
@@ -64,8 +69,11 @@ app.get('/', (req, res) => {
 // API Routes
 app.use('/api/products', productRoutes);
 app.use('/api/suppliers', supplierRoutes);
+app.use('/api/suppliers', supplierVerificationRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/foods', foodRoutes);
+app.use('/api/orders', orderRoutes);
+app.use('/api/admin', adminRoutes);
 
 // 404 Handler - For unmatched routes
 app.use((req, res) => {

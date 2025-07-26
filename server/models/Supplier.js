@@ -30,7 +30,31 @@ const addressSchema = new mongoose.Schema({
     }
 });
 
+const verificationDataSchema = new mongoose.Schema({
+    registrationNumber: String,
+    gstNumber: String,
+    address: String,
+    documents: [String],
+    requestedAt: Date,
+    verifiedAt: Date,
+    verifiedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    },
+    rejectedAt: Date,
+    rejectedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    },
+    rejectionReason: String
+}, { _id: false });
+
 const supplierSchema = new mongoose.Schema({
+    // Reference to user account
+    userId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    },
     name: {
         type: String,
         required: [true, 'Supplier name is required'],
@@ -55,7 +79,22 @@ const supplierSchema = new mongoose.Schema({
         trim: true,
         match: [/^\d{10}$/, 'Please provide a valid 10-digit phone number']
     },
-    address: addressSchema,
+    address: {
+        type: addressSchema,
+        required: [true, 'Address is required']
+    },
+    // Geolocation for mapping and nearby search
+    location: {
+        type: {
+            type: String,
+            enum: ['Point'],
+            default: 'Point'
+        },
+        coordinates: {
+            type: [Number], // [longitude, latitude]
+            default: [0, 0]
+        }
+    },
     gstNumber: {
         type: String,
         required: [true, 'GST number is required'],
@@ -79,6 +118,31 @@ const supplierSchema = new mongoose.Schema({
         type: String,
         trim: true
     },
+    // Verification and rating fields
+    isVerified: {
+        type: Boolean,
+        default: false
+    },
+    verificationStatus: {
+        type: String,
+        enum: ['not_requested', 'pending', 'verified', 'rejected'],
+        default: 'not_requested'
+    },
+    verificationData: verificationDataSchema,
+    rating: {
+        type: Number,
+        min: 0,
+        max: 5,
+        default: 0
+    },
+    ratingCount: {
+        type: Number,
+        default: 0
+    },
+    // Features offered by the supplier
+    features: [{
+        type: String
+    }],
     categories: [{
         type: String,
         trim: true

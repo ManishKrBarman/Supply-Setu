@@ -2,8 +2,18 @@ import axios from 'axios';
 
 // Get token from localStorage
 const getAuthToken = () => {
-    const user = localStorage.getItem('user');
-    return user ? JSON.parse(user).token : null;
+    const userData = localStorage.getItem('user');
+    if (userData) {
+        try {
+            const parsed = JSON.parse(userData);
+            return parsed.token || null;
+        } catch (error) {
+            console.error('Error parsing user data from localStorage:', error);
+            localStorage.removeItem('user');
+            return null;
+        }
+    }
+    return null;
 };
 
 // Create axios instance with custom config
@@ -12,6 +22,8 @@ const api = axios.create({
     headers: {
         'Content-Type': 'application/json',
     },
+    // Add timeout to catch connection issues faster
+    timeout: 10000
 });
 
 // Add request interceptor to include auth token in headers

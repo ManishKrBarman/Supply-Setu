@@ -27,14 +27,51 @@ const DashboardLayout = () => {
     navigate('/login');
   };
 
-  // Navigation items for the sidebar
-  const navItems = [
-    { icon: <FaHome />, label: 'Dashboard', path: '/dashboard' },
-    { icon: <FaBox />, label: 'Products', path: '/dashboard/products' },
-    { icon: <FaUsers />, label: 'Suppliers', path: '/dashboard/suppliers' },
-    { icon: <FaUtensils />, label: 'Foods', path: '/dashboard/foods' },
-    { icon: <FaChartBar />, label: 'Analytics', path: '/dashboard/analytics' },
-  ];
+  // User role from auth service
+  const userRole = user?.role || 'vendor';
+  
+  // Navigation items for the sidebar based on role
+  const getNavItems = () => {
+    const commonItems = [
+      { icon: <FaHome />, label: 'Dashboard', path: '/dashboard' },
+      { icon: <FaChartBar />, label: 'Analytics', path: '/dashboard/analytics' },
+    ];
+    
+    // Vendor specific items
+    if (userRole === 'vendor') {
+      return [
+        ...commonItems,
+        { icon: <FaUsers />, label: 'Suppliers', path: '/dashboard/suppliers' },
+        { icon: <FaBox />, label: 'My Orders', path: '/dashboard/orders' },
+        { icon: <FaUtensils />, label: 'My Foods', path: '/dashboard/foods' },
+      ];
+    }
+    
+    // Supplier specific items
+    if (userRole === 'supplier') {
+      return [
+        ...commonItems,
+        { icon: <FaBox />, label: 'My Products', path: '/dashboard/products' },
+        { icon: <FaBox />, label: 'Customer Orders', path: '/dashboard/supplier-orders' },
+      ];
+    }
+    
+    // Admin items
+    if (userRole === 'admin') {
+      return [
+        ...commonItems,
+        { icon: <FaUsers />, label: 'Users', path: '/dashboard/users' },
+        { icon: <FaBox />, label: 'Products', path: '/dashboard/products' },
+        { icon: <FaUsers />, label: 'Suppliers', path: '/dashboard/suppliers' },
+        { icon: <FaUtensils />, label: 'Foods', path: '/dashboard/foods' },
+        { icon: <FaBox />, label: 'Orders', path: '/dashboard/admin-orders' },
+      ];
+    }
+    
+    return commonItems;
+  };
+  
+  const navItems = getNavItems();
 
   return (
     <div className="h-screen flex overflow-hidden bg-gray-100">

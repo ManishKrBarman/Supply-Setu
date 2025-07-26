@@ -1,19 +1,66 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { Card, Table, Badge, Alert } from '../components/DataDisplay';
 import Button from '../components/Button';
 import { FormGroup, Label, Input, Select } from '../components/FormElements';
-import { FaFilter, FaStar, FaMapMarkerAlt, FaPhoneAlt, FaMotorcycle } from 'react-icons/fa';
+import { FaFilter, FaStar, FaMapMarkerAlt, FaPhoneAlt, FaMotorcycle, FaCheck, FaCheckCircle, FaShieldAlt } from 'react-icons/fa';
+import { getSuppliers } from '../api/supplierService';
+import { getUserRole, getCurrentUser } from '../api/authService';
 
 const SuppliersPage = () => {
+  const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedRegion, setSelectedRegion] = useState('all');
   const [showFilters, setShowFilters] = useState(false);
+  const [suppliers, setSuppliers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [userRole, setUserRole] = useState(null);
+  const [currentUser, setCurrentUser] = useState(null);
 
-  // Mock data - to be replaced with actual API calls
-  const suppliers = [
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const filters = {};
+        if (selectedCategory !== 'all') filters.category = selectedCategory;
+        if (selectedRegion !== 'all') filters.region = selectedRegion;
+        
+        const suppliersData = await getSuppliers(filters);
+        
+        // Handle different response formats
+        if (Array.isArray(suppliersData)) {
+          setSuppliers(suppliersData);
+        } else if (suppliersData && Array.isArray(suppliersData.data)) {
+          setSuppliers(suppliersData.data);
+        } else if (suppliersData && Array.isArray(suppliersData.suppliers)) {
+          setSuppliers(suppliersData.suppliers);
+        } else {
+          console.warn('Unexpected suppliers data format:', suppliersData);
+          setSuppliers([]); // Fallback to empty array
+        }
+        
+        const role = getUserRole();
+        setUserRole(role);
+        
+        const user = getCurrentUser();
+        setCurrentUser(user);
+      } catch (err) {
+        console.error('Error fetching suppliers:', err);
+        setError('Failed to load suppliers. Please try again later.');
+        setSuppliers([]); // Ensure suppliers is always an array
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchData();
+  }, [selectedCategory, selectedRegion]);
+  
+  // If we still need some mock data for testing until backend is fully implemented
+  const testSuppliers = suppliers.length > 0 ? suppliers : [
     { 
-      id: 1, 
+      _id: '1', 
       name: 'Singh Vegetable Supply', 
       category: 'vegetables',
       categoryLabel: 'Vegetables & Fruits',
@@ -25,10 +72,11 @@ const SuppliersPage = () => {
       regionLabel: 'North Delhi',
       rating: 4.7,
       features: ['Delivery Available', 'Bulk Discount', 'Quality Assured'],
-      status: 'Verified' 
+      isVerified: true,
+      verificationStatus: 'verified'
     },
     { 
-      id: 2, 
+      _id: '2', 
       name: 'Sharma Masala Mart', 
       category: 'spices',
       categoryLabel: 'Spices & Condiments',
@@ -40,7 +88,8 @@ const SuppliersPage = () => {
       regionLabel: 'Central Delhi',
       rating: 4.9,
       features: ['Premium Quality', 'Bulk Discount'],
-      status: 'Verified' 
+      isVerified: true,
+      verificationStatus: 'verified'
     },
     { 
       id: 3, 
@@ -130,11 +179,11 @@ const SuppliersPage = () => {
   ];
 
   // Filter suppliers based on selected category and region
-  const filteredSuppliers = suppliers.filter(supplier => {
+  const filteredSuppliers = Array.isArray(suppliers) ? suppliers.filter(supplier => {
     const categoryMatch = selectedCategory === 'all' || supplier.category === selectedCategory;
     const regionMatch = selectedRegion === 'all' || supplier.region === selectedRegion;
     return categoryMatch && regionMatch;
-  });
+  }) : [];
 
   const columns = [
     { 
@@ -186,28 +235,65 @@ const SuppliersPage = () => {
       )
     },
     { 
-      header: 'Status', 
-      accessor: 'status',
+      header: 'Verification', 
+      accessor: 'verificationStatus',
       render: (row) => {
-        return row.status === 'Verified' 
-          ? <Badge variant="success">{row.status}</Badge>
-          : <Badge variant="warning">{row.status}</Badge>;
+        if (row.isVerified) {
+          return (
+            <div className="flex items-center">
+              <Badge variant="success" className="flex items-center">
+                <FaShieldAlt className="mr-1" /> Verified
+              </Badge>
+              <div className="ml-2 text-green-700">
+                <FaCheckCircle />
+              </div>
+            </div>
+          );
+        } else if (row.verificationStatus === 'pending') {
+          return <Badge variant="warning">Pending Verification</Badge>;
+        } else {
+          return <Badge variant="secondary">Not Verified</Badge>;
+        }
       }
     },
     {
       header: 'Actions',
-      render: (row) => (
-        <div className="flex flex-col space-y-2">
-          <Link to={`/dashboard/products?supplier=${row.id}`} className="w-full">
-            <Button size="sm" variant="primary" fullWidth>
-              <FaMotorcycle className="mr-1" /> Order Now
-            </Button>
-          </Link>
-          <Link to={`/dashboard/suppliers/view/${row.id}`} className="w-full">
-            <Button size="sm" variant="ghost" fullWidth>View Details</Button>
-          </Link>
-        </div>
-      )
+      render: (row) => {
+        // If this is the supplier viewing their own page
+        const isOwnSupplier = currentUser?.id === row._id || currentUser?.supplierId === row._id;
+        
+        return (
+          <div className="flex flex-col space-y-2">
+            {userRole === 'vendor' && (
+              <Link to={`/dashboard/products?supplier=${row._id}`} className="w-full">
+                <Button size="sm" variant="primary" fullWidth>
+                  <FaMotorcycle className="mr-1" /> Order Now
+                </Button>
+              </Link>
+            )}
+            
+            <Link to={`/dashboard/suppliers/ratings/${row._id}`} className="w-full">
+              <Button size="sm" variant="info" fullWidth>
+                <FaStar className="mr-1" /> See Reviews
+              </Button>
+            </Link>
+            
+            {isOwnSupplier && !row.isVerified && (
+              <Link to={`/dashboard/suppliers/verify/${row._id}`} className="w-full">
+                <Button size="sm" variant="success" fullWidth>
+                  <FaShieldAlt className="mr-1" /> Get Verified
+                </Button>
+              </Link>
+            )}
+            
+            {userRole === 'admin' && (
+              <Link to={`/dashboard/suppliers/edit/${row._id}`} className="w-full">
+                <Button size="sm" variant="secondary" fullWidth>Edit</Button>
+              </Link>
+            )}
+          </div>
+        );
+      }
     },
   ];
 

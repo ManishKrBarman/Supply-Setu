@@ -12,15 +12,27 @@ import {
     getNearbySuppliers,
     seedMockSuppliers
 } from '../controllers/supplierControllerExtended.js';
+import { protect, checkRole, admin } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
-router.route('/').get(getAllSuppliers).post(createSupplier);
+// Public routes
+router.route('/').get(getAllSuppliers);
 router.route('/nearby').get(getNearbySuppliers);
-// Temporarily allowing public access to seed endpoint for testing purposes
-router.route('/seed').post(seedMockSuppliers);
 router.route('/search').get(searchSuppliers);
-router.route('/:id').get(getSupplierById).put(updateSupplier).delete(deleteSupplier);
+router.route('/:id').get(getSupplierById);
 router.route('/:id/products').get(getSupplierWithProducts);
+
+// NOTE: Supplier creation is now handled through user registration
+// with supplier role - not needed anymore as a separate endpoint
+// router.route('/').post(createSupplier);
+
+// Protected routes (suppliers can only update their own profile)
+router.route('/:id')
+    .put(protect, checkRole(['supplier', 'admin']), updateSupplier)
+    .delete(protect, admin, deleteSupplier);
+
+// Admin routes
+router.route('/seed').post(protect, admin, seedMockSuppliers);
 
 export default router;

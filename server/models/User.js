@@ -22,8 +22,39 @@ const userSchema = new mongoose.Schema({
     },
     role: {
         type: String,
-        enum: ['user', 'admin'],
-        default: 'user'
+        enum: ['vendor', 'supplier', 'admin'],
+        default: 'vendor'
+    },
+    isApproved: {
+        type: Boolean,
+        default: false
+    },
+    status: {
+        type: String,
+        enum: ['pending', 'approved', 'rejected', 'active', 'suspended'],
+        default: 'pending'
+    },
+    rejectionReason: {
+        type: String,
+        default: ''
+    },
+    location: {
+        type: {
+            type: String,
+            enum: ['Point'],
+            default: 'Point'
+        },
+        coordinates: {
+            type: [Number],
+            default: [0, 0]
+        },
+        address: {
+            street: String,
+            city: String,
+            state: String,
+            country: String,
+            pincode: String
+        }
     },
     createdAt: {
         type: Date,

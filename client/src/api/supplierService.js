@@ -1,10 +1,21 @@
 import api from './axios';
 
 // Supplier Service functions
-export const getSuppliers = async () => {
+export const getSuppliers = async (filters = {}) => {
     try {
-        const response = await api.get('/suppliers');
-        return response.data;
+        const queryString = new URLSearchParams(filters).toString();
+        const url = queryString ? `/suppliers?${queryString}` : '/suppliers';
+        const response = await api.get(url);
+
+        // Handle the response format from backend
+        if (response.data && response.data.success && Array.isArray(response.data.data)) {
+            return response.data.data;
+        } else if (Array.isArray(response.data)) {
+            return response.data;
+        } else {
+            console.warn('Unexpected response format from suppliers API:', response.data);
+            return [];
+        }
     } catch (error) {
         console.error('Error fetching suppliers:', error);
         throw error;
@@ -14,7 +25,13 @@ export const getSuppliers = async () => {
 export const getSupplierById = async (id) => {
     try {
         const response = await api.get(`/suppliers/${id}`);
-        return response.data;
+
+        // Handle the response format from backend
+        if (response.data && response.data.success && response.data.data) {
+            return response.data.data;
+        } else {
+            return response.data;
+        }
     } catch (error) {
         console.error(`Error fetching supplier ${id}:`, error);
         throw error;
@@ -47,6 +64,59 @@ export const deleteSupplier = async (id) => {
         return response.data;
     } catch (error) {
         console.error(`Error deleting supplier ${id}:`, error);
+        throw error;
+    }
+};
+
+// New verification methods
+export const requestVerification = async (supplierId, verificationData) => {
+    try {
+        const response = await api.post(`/suppliers/${supplierId}/verification/request`, verificationData);
+        return response.data;
+    } catch (error) {
+        console.error('Error requesting verification:', error);
+        throw error;
+    }
+};
+
+export const getVerificationStatus = async (supplierId) => {
+    try {
+        const response = await api.get(`/suppliers/${supplierId}/verification/status`);
+        return response.data;
+    } catch (error) {
+        console.error('Error getting verification status:', error);
+        throw error;
+    }
+};
+
+// Rating and review methods
+export const rateSupplier = async (supplierId, rating, review) => {
+    try {
+        const response = await api.post(`/suppliers/${supplierId}/ratings`, { rating, review });
+        return response.data;
+    } catch (error) {
+        console.error('Error rating supplier:', error);
+        throw error;
+    }
+};
+
+export const getSupplierRatings = async (supplierId) => {
+    try {
+        const response = await api.get(`/suppliers/${supplierId}/ratings`);
+        return response.data;
+    } catch (error) {
+        console.error('Error getting supplier ratings:', error);
+        throw error;
+    }
+};
+
+// Get nearby suppliers with geolocation
+export const getNearbySuppliers = async (latitude, longitude, radius = 10) => {
+    try {
+        const response = await api.get(`/suppliers/nearby?lat=${latitude}&lng=${longitude}&radius=${radius}`);
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching nearby suppliers:', error);
         throw error;
     }
 };
